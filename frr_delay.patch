@@ -1,0 +1,12 @@
+--- a/usr/local/pkg/frr.inc	2024-11-26 12:21:31.423428000 -0500
++++ b/usr/local/pkg/frr.inc	2024-11-26 12:48:19.416248000 -0500
+@@ -19,6 +19,9 @@
+  * limitations under the License.
+  */
+
++/* Delay start to allow Wireguard to finish initializing */
++sleep(30);
++
+ require_once("config.inc");
+ require_once("functions.inc");
+ require_once("interfaces.inc");
