@@ -1,12 +1,36 @@
---- a/usr/local/pkg/frr.inc	2024-11-26 12:21:31.423428000 -0500
-+++ b/usr/local/pkg/frr.inc	2024-11-26 12:48:19.416248000 -0500
-@@ -19,6 +19,9 @@
-  * limitations under the License.
-  */
-
-+/* Delay start to allow Wireguard to finish initializing */
-+sleep(30);
+--- a/etc/rc.start_packages	2024-12-11 13:07:08
++++ b/etc/rc.start_packages	2024-12-11 13:10:08
+@@ -61,10 +61,29 @@
+ 	}
+ }
+ 
++$frrdelay = false;
 +
- require_once("config.inc");
- require_once("functions.inc");
- require_once("interfaces.inc");
+ foreach (config_get_path('installedpackages/package', []) as $pkgid => $package) {
+-	echo " Starting package {$package['name']}...";
+-	sync_package($package['name']);
+-	$internal_name = get_package_internal_name($package);
++	if ($package['name'] == 'FRR') {
++		echo " Skipping FRR for now...";
++		$frrdelay = true;
++		continue;
++	} else{
++		echo " Starting package {$package['name']}...";
++		sync_package($package['name']);
++		$internal_name = get_package_internal_name($package);
++		start_service($internal_name, true);
++		unset($rcfiles[RCFILEPREFIX . strtolower($internal_name) . ".sh"]);
++		echo "done.\n";
++	}
++}
++
++if ($frrdelay) {
++	echo " Delaying 30 seconds to allow Wireguard to reconfigure interfaces...";
++	sleep(30);
++	echo " Starting package FRR...";
++	sync_package('FRR');
++	$internal_name = 'frr';
+ 	start_service($internal_name, true);
+ 	unset($rcfiles[RCFILEPREFIX . strtolower($internal_name) . ".sh"]);
+ 	echo "done.\n";
+  
